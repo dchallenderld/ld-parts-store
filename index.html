@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>[TEST] LD Parts Store | Internal Testing Only</title>
+<style>
+  :root{
+    --racing-red:#CC1820; --deep-red:#A51018; --carbon:#1A1A1A;
+    --charcoal:#3A3A3A; --steel:#9B9B9B; --silver:#E8E8E8; --offwhite:#F5F5F5;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:Arial,Helvetica,sans-serif;color:var(--carbon);background:#fff;font-size:11pt}
+  .wrap{max-width:1180px;margin:0 auto;padding:0 20px}
+
+  /* Header */
+  header{padding:18px 0 14px}
+  .head-row{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px}
+  .logo-lockup{display:flex;align-items:center;gap:14px}
+  .logo-lockup img{height:56px;display:none}
+  .logo-text{display:block}
+  .logo-text .ld{font-family:'Arial Black',Arial,sans-serif;font-size:26px;line-height:1;color:var(--carbon);letter-spacing:.5px}
+  .logo-text .ld span{color:var(--racing-red)}
+  .logo-text .desc{font-size:9pt;color:var(--steel);margin-top:3px}
+  .strapline{font-family:Arial,sans-serif;font-weight:bold;color:var(--racing-red);font-size:13pt;text-align:right}
+  .head-contact{font-size:9pt;color:var(--charcoal);text-align:right;margin-top:4px}
+  .red-rule{border:none;border-top:3px solid var(--racing-red);margin:12px 0 0}
+
+  /* Intro / notices */
+  .intro{background:var(--silver);padding:16px 18px;margin:20px 0}
+  .intro h1{font-family:'Arial Black',Arial,sans-serif;font-size:20pt;color:var(--carbon);margin-bottom:6px}
+  .intro p{font-size:10.5pt;color:var(--charcoal);margin-top:4px}
+  .intro strong{color:var(--carbon)}
+
+  /* Account / sign-in */
+  .acct{font-size:9pt;margin-top:4px;text-align:right}
+  .acct a{color:var(--racing-red);font-weight:bold;cursor:pointer;text-decoration:none}
+  .acct .who{color:var(--charcoal)}
+  .buy{cursor:pointer}
+  .buy.locked{background:var(--charcoal)}
+  .buy.locked:hover{background:var(--carbon)}
+  .modal-bg{position:fixed;inset:0;background:rgba(26,26,26,.55);display:none;align-items:center;justify-content:center;z-index:50}
+  .modal-bg.open{display:flex}
+  .modal{background:#fff;max-width:430px;width:92%;padding:22px;border-top:4px solid var(--racing-red);max-height:90vh;overflow:auto}
+  .modal h2{font-size:14pt;color:var(--racing-red);margin-bottom:4px}
+  .modal p{font-size:9.5pt;color:var(--charcoal);margin-bottom:10px}
+  .modal label{display:block;font-size:9pt;font-weight:bold;color:var(--carbon);margin:10px 0 3px}
+  .modal input{width:100%;padding:8px 10px;border:1px solid var(--steel);font-family:Arial,sans-serif;font-size:10.5pt}
+  .modal .actions{display:flex;gap:10px;margin-top:16px;align-items:center}
+  .modal button.buy{border:none;font-family:Arial,sans-serif;font-size:10pt}
+  .modal .cancel{font-size:9.5pt;color:var(--steel);cursor:pointer;background:none;border:none;font-family:Arial,sans-serif}
+  .modal .tabs{display:flex;margin-bottom:12px}
+  .modal .tabs button{flex:1;padding:8px;border:1px solid var(--silver);background:var(--offwhite);font-weight:bold;font-size:9.5pt;cursor:pointer;font-family:Arial,sans-serif;color:var(--carbon)}
+  .modal .tabs button.on{background:var(--racing-red);color:#fff;border-color:var(--racing-red)}
+  .modal .err{color:var(--racing-red);font-size:9pt;margin-top:8px;display:none}
+  .modal .privacy{margin-top:10px;font-size:8pt;color:var(--steel)}
+
+  /* Category tiles */
+  .cats-title{font-family:Arial,sans-serif;font-weight:bold;font-size:14pt;color:var(--racing-red);margin:0 0 10px}
+  .cats{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin-bottom:26px}
+  .cat-tile{border:1px solid var(--silver);cursor:pointer;background:#fff}
+  .cat-tile .cimg{height:96px;background:var(--offwhite);display:flex;align-items:center;justify-content:center;overflow:hidden}
+  .cat-tile .cimg{height:110px}
+  .cat-tile .cimg img{width:100%;height:100%;object-fit:contain;padding:4px}
+  .cat-tile .cph{font-family:'Arial Black',Arial,sans-serif;font-size:22pt;color:var(--silver);display:none}
+  .cat-tile .cimg.noimg .cph{display:block}
+  .cat-tile .clabel{background:var(--racing-red);color:#fff;font-weight:bold;font-size:8.5pt;letter-spacing:.4px;text-transform:uppercase;text-align:center;padding:7px 6px;line-height:1.3}
+  .cat-tile:hover .clabel{background:var(--deep-red)}
+  .cat-tile.active{outline:2px solid var(--carbon)}
+  .cat-tile.active .clabel{background:var(--carbon)}
+
+  /* Controls */
+  .controls{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:0 0 14px}
+  .controls input,.controls select{font-family:Arial,sans-serif;font-size:10.5pt;padding:9px 12px;border:1px solid var(--steel);background:#fff;color:var(--carbon)}
+  .controls input{flex:1;min-width:220px}
+  .count{font-size:9pt;color:var(--steel);margin-left:auto}
+
+  /* Grid */
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px;margin-bottom:30px}
+  .card{border:1px solid var(--silver);display:flex;flex-direction:column}
+  .card .cat{background:var(--carbon);color:#fff;font-size:8.5pt;font-weight:bold;letter-spacing:.6px;padding:5px 10px;text-transform:uppercase}
+  .imgbox{position:relative;height:170px;background:var(--offwhite);border-bottom:1px solid var(--silver);display:flex;align-items:center;justify-content:center;overflow:hidden}
+  .imgbox img{width:100%;height:100%;object-fit:contain}
+  .imgbox .ph{display:none;color:var(--steel);font-size:9pt}
+  .imgbox.noimg .ph{display:block}
+  .gnav{position:absolute;top:50%;transform:translateY(-50%);width:24px;height:24px;border-radius:50%;border:none;background:rgba(26,26,26,.55);color:#fff;font-size:11px;line-height:1;cursor:pointer;display:none;align-items:center;justify-content:center;z-index:2}
+  .gnav:hover{background:rgba(26,26,26,.8)}
+  .gprev{left:6px}
+  .gnext{right:6px}
+  .gdots{position:absolute;bottom:6px;left:0;right:0;display:none;justify-content:center;gap:4px;z-index:2}
+  .gdot{width:6px;height:6px;border-radius:50%;background:rgba(58,58,58,.35)}
+  .gdot.on{background:var(--racing-red)}
+  .qtyhint{font-size:8pt;color:var(--steel);margin-top:2px}
+  .stockline{font-size:8.5pt;font-weight:bold;margin-top:4px}
+  .stockline.in{color:var(--charcoal)}
+  .stockline.out{color:var(--racing-red)}
+  .stockline.na{color:var(--steel)}
+  .card .body{padding:12px 12px 0;flex:1}
+  .card .part{font-family:'Courier New',monospace;font-size:10pt;color:var(--charcoal)}
+  .card h3{font-size:10.5pt;color:var(--carbon);font-weight:bold;margin:5px 0 8px;line-height:1.35}
+  .card .ship{font-size:8.5pt;color:var(--steel)}
+  .card .foot{display:flex;align-items:center;justify-content:space-between;padding:10px 12px 12px;gap:8px}
+  .price{font-family:'Arial Black',Arial,sans-serif;font-size:14pt;color:var(--carbon)}
+  .price small{font-family:Arial,sans-serif;font-size:8pt;color:var(--steel);font-weight:normal}
+  .buy{background:var(--racing-red);color:#fff;font-weight:bold;font-size:10pt;text-decoration:none;padding:9px 16px;display:inline-block;white-space:nowrap}
+  .buy:hover{background:var(--deep-red)}
+  .addbasket{background:#fff;color:var(--racing-red);border:1.5px solid var(--racing-red);font-weight:bold;font-size:9pt;text-decoration:none;padding:7px 12px;display:inline-block;white-space:nowrap;cursor:pointer;font-family:Arial,sans-serif;margin-top:6px}
+  .addbasket:hover{background:var(--offwhite)}
+  .addbasket.added{background:var(--racing-red);color:#fff;border-color:var(--racing-red)}
+
+  /* Basket */
+  .basket-btn{background:none;border:1.5px solid var(--carbon);color:var(--carbon);font-family:Arial,sans-serif;font-weight:bold;font-size:9.5pt;padding:7px 12px;cursor:pointer;margin-top:4px}
+  .basket-btn:hover{background:var(--offwhite)}
+  .basket-count{background:var(--racing-red);color:#fff;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;font-size:8pt;padding:0 4px;margin-left:4px}
+  .basket-modal{max-width:520px}
+  .basket-row{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--silver)}
+  .basket-row .binfo{flex:1;min-width:0}
+  .basket-row .bpart{font-family:'Courier New',monospace;font-size:9.5pt;color:var(--charcoal)}
+  .basket-row .bname{font-size:9.5pt;color:var(--carbon);line-height:1.3}
+  .basket-row .bqty{display:flex;align-items:center;gap:6px}
+  .basket-row .bqty button{width:24px;height:24px;border:1px solid var(--steel);background:#fff;cursor:pointer;font-size:11pt;line-height:1}
+  .basket-row .bqty span{min-width:20px;text-align:center;font-size:10pt}
+  .basket-row .bprice{font-family:'Arial Black',Arial,sans-serif;font-size:10.5pt;color:var(--carbon);min-width:70px;text-align:right}
+  .basket-row .bremove{color:var(--steel);font-size:8.5pt;cursor:pointer;background:none;border:none;text-decoration:underline;font-family:Arial,sans-serif;margin-left:6px}
+  .basket-shipnote{font-size:9pt;color:var(--charcoal);background:var(--offwhite);padding:8px 10px;margin-top:10px}
+  .basket-total{display:flex;justify-content:space-between;align-items:center;font-family:'Arial Black',Arial,sans-serif;font-size:12pt;color:var(--carbon);padding:12px 0 0}
+
+  /* Delivery info */
+  .delivery{border:1px solid var(--silver);padding:14px 18px;margin-bottom:30px}
+  .delivery h2{font-family:Arial,sans-serif;font-weight:bold;font-size:14pt;color:var(--racing-red);margin-bottom:8px}
+  .delivery table{border-collapse:collapse;width:100%;max-width:640px}
+  .delivery th{background:var(--racing-red);color:#fff;font-size:10pt;text-align:left;padding:7px 10px}
+  .delivery td{font-size:10.5pt;padding:7px 10px;border-bottom:1px solid var(--silver)}
+  .delivery tr:nth-child(even) td{background:var(--offwhite);color:var(--charcoal)}
+  .delivery p{font-size:9pt;color:var(--steel);margin-top:8px}
+
+  /* Footer */
+  footer{border-top:3px solid var(--racing-red);background:var(--offwhite);padding:12px 0;margin-top:20px}
+  footer .wrap{font-size:9pt;color:var(--charcoal);text-align:center;line-height:1.6}
+  .nores{color:var(--steel);font-size:10.5pt;padding:20px 0}
+  @media(max-width:640px){.strapline,.head-contact{text-align:left}}
+</style>
+</head>
+<body>
+
+<div style="background:#1A1A1A;color:#fff;text-align:center;padding:10px 16px;font-size:10pt;font-weight:bold">
+  TEST ENVIRONMENT &mdash; no real payments are taken. Pay with test card <span style="font-family:'Courier New',monospace">4242 4242 4242 4242</span>, any future expiry date, any CVC, any UK postcode.
+</div>
+
+<header>
+  <div class="wrap">
+    <div class="head-row">
+      <div class="logo-lockup">
+        <img src="ld-logo.png" alt="Lawrence David" onload="this.style.display='inline-block';document.getElementById('logotext').style.display='none'">
+        <div class="logo-text" id="logotext">
+          <div class="ld">LAWRENCE <span>DAVID</span></div>
+          <div class="desc">Specialist Vehicle Body Builders since 1973</div>
+        </div>
+      </div>
+      <div>
+        <div class="strapline">The Strength Behind the Haulage Industry</div>
+        <div class="head-contact">Tel: 01733 397622 (option 4 for Parts) &nbsp;|&nbsp; parts@lawrencedavid.co.uk</div>
+        <div class="acct" id="acct"></div>
+        <div style="text-align:right"><button class="basket-btn" onclick="openBasket()">Basket <span class="basket-count" id="basketCount">0</span></button></div>
+      </div>
+    </div>
+    <hr class="red-rule">
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="intro">
+    <h1>LD Parts Store</h1>
+    <p>Genuine Lawrence David trailer and bodywork parts, available to order online with secure card payment. <strong>All prices exclude VAT.</strong> A VAT invoice is emailed to you automatically after purchase.</p>
+    <p style="margin-top:12px"><a class="buy" href="https://lawrencedavid.jotform.com/250723906159056" target="_blank" rel="noopener">Request a Quote</a>&nbsp;&nbsp;<span style="font-size:9pt;color:var(--charcoal)">Can't find a part, need a bulk price, or want delivery quoted? Send us a quote request.</span></p>
+    <p>Delivery or free collection from our Peterborough site is selected at checkout. Items marked <strong>"delivery quoted separately"</strong> can be purchased online; our team will then contact you to arrange and quote transport, or you can collect.</p>
+  </div>
+
+  <div class="controls">
+    <input type="text" id="search" placeholder="Search by part number or description&hellip;" aria-label="Search parts">
+    <select id="catFilter" aria-label="Filter by category"><option value="">All categories</option></select>
+    <select id="sortBy" aria-label="Sort">
+      <option value="cat">Sort: Category</option>
+      <option value="name">Sort: Description A&ndash;Z</option>
+      <option value="priceAsc">Sort: Price low&ndash;high</option>
+      <option value="priceDesc">Sort: Price high&ndash;low</option>
+    </select>
+    <span class="count" id="count"></span>
+  </div>
+
+  <h2 class="cats-title">Shop by Category</h2>
+  <div class="cats" id="cats"></div>
+
+  <hr class="red-rule" style="margin:8px 0 20px">
+  <h2 class="cats-title" id="partsTitle">Parts</h2>
+
+  <div class="grid" id="grid"></div>
+  <div class="nores" id="nores" style="display:none">No parts match your search. Can't find what you need? <a href="https://lawrencedavid.jotform.com/250723906159056" target="_blank" rel="noopener" style="color:var(--racing-red);font-weight:bold">Request a quote</a> and our Parts team will help.</div>
+
+  <div class="delivery">
+    <h2>Delivery Options</h2>
+    <table>
+      <tr><th>Option</th><th>Cost (ex VAT)</th><th>Details</th></tr>
+      <tr><td>DX Standard Delivery</td><td>&pound;25.00</td><td>Standard parts, UK mainland</td></tr>
+      <tr><td>Collection</td><td>Free</td><td>Collect from Lawrence David, Peterborough</td></tr>
+      <tr><td>Quoted delivery</td><td>POA</td><td>Oversized or bulky items &mdash; quoted after order</td></tr>
+    </table>
+    <p>Delivery is selected and paid at checkout. For oversized items or bulk orders you can <a href="https://lawrencedavid.jotform.com/250723906159056" target="_blank" rel="noopener" style="color:var(--racing-red);font-weight:bold">request a quote</a>. Questions? Call 01733 397622 (option 4 for Parts) or email parts@lawrencedavid.co.uk.</p>
+  </div>
+</main>
+
+<div class="modal-bg" id="modalBg">
+  <div class="modal">
+    <div class="tabs"><button id="tabReg" class="on" onclick="setTab('reg')">Register</button><button id="tabIn" onclick="setTab('in')">Sign in</button></div>
+    <div id="paneReg">
+      <h2>Create an account</h2>
+      <p>Register once to unlock purchasing. We use these details to process your orders and VAT invoices.</p>
+      <label>Full name *</label><input id="rName">
+      <label>Email *</label><input id="rEmail" type="email">
+      <label>Business name</label><input id="rBiz">
+      <label>Business contact number *</label><input id="rPhone" type="tel">
+      <label>VAT number (if applicable)</label><input id="rVat" placeholder="GB123456789">
+      <div class="err" id="rErr">Please complete the required fields (name, valid email, contact number).</div>
+      <div class="actions"><button class="buy" onclick="doRegister()">Register &amp; sign in</button><button class="cancel" onclick="closeAcct()">Cancel</button></div>
+      <p class="privacy">Your details are held by Lawrence David Limited to administer your account and orders. Contact parts@lawrencedavid.co.uk with any queries.</p>
+    </div>
+    <div id="paneIn" style="display:none">
+      <h2>Sign in</h2>
+      <p>Enter the name and email you registered with.</p>
+      <label>Full name *</label><input id="iName">
+      <label>Email *</label><input id="iEmail" type="email">
+      <div class="err" id="iErr">Please enter your name and a valid email address.</div>
+      <div class="actions"><button class="buy" onclick="doSignIn()">Sign in</button><button class="cancel" onclick="closeAcct()">Cancel</button></div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-bg" id="basketModalBg">
+  <div class="modal basket-modal">
+    <h2>Your Basket</h2>
+    <div id="basketItems"></div>
+    <div id="basketEmpty" style="display:none;color:var(--steel);font-size:9.5pt;padding:10px 0">Your basket is empty. Add parts from the shop to build an order.</div>
+    <div class="basket-shipnote" id="basketShipNote" style="display:none"></div>
+    <div class="basket-total" id="basketTotal" style="display:none"></div>
+    <div id="basketErr" class="err"></div>
+    <div class="actions">
+      <button class="buy" id="basketCheckoutBtn" onclick="checkoutBasket()">Checkout</button>
+      <button class="cancel" onclick="closeBasket()">Close</button>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <div class="wrap">
+    Lawrence David Limited &nbsp;|&nbsp; The Strength Behind the Haulage Industry &nbsp;|&nbsp; Registered in England No. 01110305<br>
+    Tel: 01733 397622 &nbsp;|&nbsp; parts@lawrencedavid.co.uk &nbsp;|&nbsp; www.lawrencedavid.co.uk
+  </div>
+</footer>
+
+<script>
+const PARTS=[
+["TW/168B","OS FRONT PILLAR @ 3600mm - 20/44","PILLARS",430.78,"POA","https://buy.stripe.com/test_7sYdR9b8UgQX31AeyAdZ600",10],
+["CS/655","STAINLESS CURTAIN BUCKLE (1582)","CURTAINS",10.42,"DX","https://buy.stripe.com/test_5kQ9AT90M9ovdGe4Y0dZ601",240],
+["LDS/1612","Pneumatic Distributor M10070101_1","MISC",43.40,"DX","https://buy.stripe.com/test_cNi8wPb8U7gnby6bmodZ602",17],
+["TRT/127","OS FRONT CORNER CAP - 2018","CORNER CAPS",71.08,"DX","https://buy.stripe.com/test_7sY14nel60RZau24Y0dZ603",11],
+["AS/045","ALLOY ROOF COIL 2515 wide x 21 gauge 3003 H16","ROOF",83.26,"POA","https://buy.stripe.com/test_aFa6oH7WIgQXby6768dZ604",0.2],
+["LDS/1856","Side Guard 4m K442971","SIDE GUARDS",104.17,"POA","https://buy.stripe.com/test_dRm3cvdh2307fOm4Y0dZ605",27],
+["LDS/1209","MUDGUARD WITHOUT MUDFLAP - M180117","MUDWINGS + SPRAY SUPPRESSION",34.03,"POA","https://buy.stripe.com/test_00w6oH90MbwD45E0HKdZ606",53],
+["TW/038","GRP DEFLECTOR small - NO LD LOGO 20/44","DEFLECTORS",937.50,"POA","https://buy.stripe.com/test_8x29AT1yk9oveKi3TWdZ607",1],
+["LDS/1404","MOUNTING BRACKETS - M19040702","MISC",4.51,"DX","https://buy.stripe.com/test_00wfZhdh21W345EbmodZ608",215],
+["TW/228","ROOF FRONT CROSSMEMBER BOLT ON - 170 DEEP","HEADERS",371.53,"POA","https://buy.stripe.com/test_14A3cv7WI58f6dM9egdZ609",13],
+["VB/021","AL TOP HAT 22mm (TH2) 2332mm LONG +0/-3 (Prebow 1\" Rise) (Aalco TH5)","ROOF",28.70,"POA","https://buy.stripe.com/test_14A14n4KweIPby6aikdZ60a",17],
+["LDS/1226","SIDE VALANCE (AMAZON) K390099","MUDWINGS + SPRAY SUPPRESSION",166.67,"POA","https://buy.stripe.com/test_5kQaEX4Kw1W39pYeyAdZ60b",58],
+["LDS/1179","K171477 BUMPER BRACKET","UNDERRUN & LIGHT PANS",121.53,"DX","https://buy.stripe.com/test_aFa9AT7WIfMT0Ts3TWdZ60c",9],
+["TW/044B","GRP PANEL 2465x3513x21mm WHITE RAL9010","PANELS",1001.60,"POA","https://buy.stripe.com/test_bJe3cv1ykdELgSq8acdZ60d",4],
+["TW/025","2mm ZED ROOF X-M","ROOF",26.57,"POA","https://buy.stripe.com/test_00w3cv0uggQXfOmaikdZ60e",13],
+["CS/053","TENSIONER CONNECTOR TOP (DOG)","TENSIONERS",13.89,"DX","https://buy.stripe.com/test_9B628r4Kw7gn9pYgGIdZ60f",4],
+["LDS/1230","LADDER & OPERATIONAL DECALS - K145180 - STANDARD","LADDERS/STEPS",289.34,"POA","https://buy.stripe.com/test_4gM4gz2CoeIP7hQduwdZ60g",8],
+["VB/170-13436","ALLOY ROOF RAIL TO SUIT 22.3mm PANEL @ 13436mm Hydro No. 57344","ALLOY CAPPINGS",817.08,"POA","https://buy.stripe.com/test_28EcN50ug1W31Xw8acdZ60h",0],
+["LDS/1126","W150173-KTL+L MUDWING BRACKET","MUDWINGS + SPRAY SUPPRESSION",21.70,"DX","https://buy.stripe.com/test_5kQ9AT2Co7gn8lUcqsdZ60i",28],
+["LDS/1516","MUDGUARD WITH LOGO M18011715","MUDWINGS + SPRAY SUPPRESSION",58.68,"POA","https://buy.stripe.com/test_00wfZh4KwcAH31AduwdZ60j",181],
+["TW/105A","TAIL-PIECE WEBBING GREY @ 1050mm Long","CURTAINS",6.89,"DX","https://buy.stripe.com/test_4gM00j6SE6cj59I9egdZ60k",94],
+["VB/013","ROOF FRONT CORNER CASTING (MILL FINISH)","CORNER CAPS",53.87,"DX","https://buy.stripe.com/test_14A28r90Masz1XwbmodZ60l",38],
+["TW/034","OS FRT (LANGVER) RATCHET TENSIONER R45TW R/H/F C/W LD LOGO","TENSIONERS",125.00,"DX","https://buy.stripe.com/test_5kQdR91yk1W36dMcqsdZ60m",11],
+["VB/170-2250","ALLOY ROOF RAIL TO SUIT 22.3mm PANEL @ 2250mm Hydro No. 57344","ALLOY CAPPINGS",169.58,"POA","https://buy.stripe.com/test_cNibJ1fpa1W3au20HKdZ60n",23],
+["CS/722A","BLACK FLEXIBLE PVC PELMET DP8 - 13500 LONG (MOQ = 48)","VALANCES",82.92,"POA","https://buy.stripe.com/test_6oU5kD3Gs3079pY9egdZ60o",17],
+["TW/033","NS FRT (LANGVER) RATCHET TENSIONER R45TW L/H/F C/W LD LOGO","TENSIONERS",125.00,"DX","https://buy.stripe.com/test_8x2cN5a4Q3079pYduwdZ60p",19],
+["TW/083","GRP DEFLECTOR (DEEP version no logo) Code. BM-1102 (WHITE 9010)","DEFLECTORS",1005.43,"POA","https://buy.stripe.com/test_bJeaEXa4Q0RZcCa3TWdZ60q",2],
+["TW/167B","NS FRONT PILLAR @ 3600mm - 20/44","PILLARS",430.78,"POA","https://buy.stripe.com/test_aFa8wP6SE0RZby69egdZ60r",15],
+["TNX/009","ROOF REAR DRIP RAIL","CROSS MEMBER",46.88,"POA","https://buy.stripe.com/test_28EaEX4Kw58f7hQduwdZ60s",12],
+["TW/098","TOP RAIL - GALV. REAR FRAME","HEADERS",97.22,"POA","https://buy.stripe.com/test_5kQfZh7WI0RZ59I2PSdZ60t",5],
+["TN/286A","VALANCE CARRIER '94' 13.050 MTR LENGTHS (PK 60)","CARRIERS",171.61,"POA","https://buy.stripe.com/test_9B63cv7WI44b45EeyAdZ60u",6],
+["CS/096","STAINLESS STEEL SPRING (CBF. LD/CS096)","CURTAINS",1.70,"DX","https://buy.stripe.com/test_28E4gzdh28kr7hQcqsdZ60v",3814],
+["TW/026","NS FRT CORNER CAP","CORNER CAPS",80.97,"DX","https://buy.stripe.com/test_3cI6oHccY307gSq2PSdZ60w",null],
+["VB/172-3600","ALLOY FRONT PILLAR @ 3600mm","ALLOY CAPPINGS",184.88,"POA","https://buy.stripe.com/test_fZubJ13Gs1W3cCaaikdZ60x",36],
+["TN/007A","ALUZINC TRACK 12802 LONG","TRACKS",201.20,"POA","https://buy.stripe.com/test_9B6cN5ccY1W331AfCEdZ60y",0],
+["VB/171-13291","ALLOY SIDE RAVE TO SUIT 22.3mm PANEL @ 13291mm Hydro No. 57345","ALLOY CAPPINGS",904.63,"POA","https://buy.stripe.com/test_4gM14nfpa30731AeyAdZ60z",0],
+["TW/158","NS REAR CORNER CAP - CS TRAILERS","CORNER CAPS",68.98,"DX","https://buy.stripe.com/test_6oUdR9fpadELeKibmodZ60A",null],
+["TW/035","GALV FRONT DEFLECTOR REF CAGE NUTS - CS TRAILERS","DEFLECTORS",91.20,"POA","https://buy.stripe.com/test_5kQ00j3Gs9ov6dMduwdZ60B",7],
+["TRT/126","NS FRONT CORNER CAP - 2018","CORNER CAPS",71.08,"DX","https://buy.stripe.com/test_7sY7sL4Kw0RZfOmbmodZ60C",1],
+["CS/065","TENSIONER - CURTAIN TENSION HANDLE c/w SLEEVE","TENSIONERS",10.45,"DX","https://buy.stripe.com/test_3cI4gz90M44b8lU4Y0dZ60D",21],
+["LDS/1343","M14230101 DOWNRIGHTS","SIDE GUARDS",26.46,"DX","https://buy.stripe.com/test_dRmfZh3Gs0RZfOm4Y0dZ60E",31],
+["AR/009","ALLOY TUBE 42.6mm OD x 35mm ID @ 8Mtrs","ALLOY TUBES",23.44,"POA","https://buy.stripe.com/test_bJe14nb8UgQX9pYaikdZ60F",930],
+["TW/159","OS REAR CORNER CAP - CS TRAILERS","CORNER CAPS",68.98,"DX","https://buy.stripe.com/test_cNi3cvdh21W37hQ8acdZ60G",null],
+["CS/055","TENSIONER COUPLING BOTTOM (DOG)","TENSIONERS",17.36,"DX","https://buy.stripe.com/test_3cI4gza4QeIP59I624dZ60H",0],
+["VB/022","GALV REAR FRAME TOP RAIL","HEADERS",244.49,"POA","https://buy.stripe.com/test_14A28r2Co44bcCa2PSdZ60I",null],
+["LDS/1566","K083987-KTL+L AMAZON COUPLING PLATE (NEW STYLE)","COUPLINGS",85.07,"DX","https://buy.stripe.com/test_00w4gz0ug0RZ59IcqsdZ60J",4],
+["TW/027","OS FRT CORNER CAP","CORNER CAPS",80.97,"DX","https://buy.stripe.com/test_00wfZhel658f8lU2PSdZ60K",33]
+];
+
+const SHIP={
+ "DX":"Delivery: DX Standard £25.00 or free collection",
+ "POA":"Delivery quoted separately after order, or free collection"
+};
+/* Account gate. When the Airtable registration form is live, paste its public URL below —
+   registrations will then open the form pre-filled and feed the LD Parts Store customer base in Airtable.
+   While empty, registrations fall back to an email to sales@. */
+const REGISTER_FORM_URL="";
+let CUST=null;try{CUST=JSON.parse(localStorage.getItem("ldCustomer")||"null")}catch(e){}
+
+const stockLine=s=>(s===null||s===undefined)
+  ?'<div class="stockline na">Stock on request</div>'
+  :(s>0?'<div class="stockline in">In stock: '+s+'</div>'
+       :'<div class="stockline out">Out of stock &mdash; available to order</div>');
+const gbp=v=>"£"+v.toLocaleString("en-GB",{minimumFractionDigits:2,maximumFractionDigits:2});
+const esc=s=>s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+
+const grid=document.getElementById("grid"),search=document.getElementById("search"),
+catFilter=document.getElementById("catFilter"),sortBy=document.getElementById("sortBy"),
+count=document.getElementById("count"),nores=document.getElementById("nores");
+
+const CATS=[...new Set(PARTS.map(p=>p[2]))].sort();
+CATS.forEach(c=>{
+  const o=document.createElement("option");o.value=c;o.textContent=c;catFilter.appendChild(o);
+});
+
+/* Category tiles: named category image first, then cat_<slug>.jpg, then part photos in the category */
+const CAT_IMG={
+ "ALLOY CAPPINGS":"Alloy Cappings.jpg","ALLOY TUBES":"Alloy Tube Alloy Profiles.jpg","CARRIERS":"Carriers.jpg",
+ "CORNER CAPS":"Corner Caps.jpg","COUPLINGS":"Couplings.png","CROSS MEMBER":"Cross Member.jpg",
+ "CURTAINS":"Curtains.jpg","DEFLECTORS":"Deflectors.jpg","HEADERS":"Header.jpg",
+ "LADDERS/STEPS":"Steps.jpg","MISC":"ld-logo-round.png","MUDWINGS + SPRAY SUPPRESSION":"Mud Wing & Spray Suppression.jpg",
+ "PANELS":"Panels.jpg","PILLARS":"Front Pillar.jpg","ROOF":"Roof.png","SIDE GUARDS":"Side Guards.jpg",
+ "TENSIONERS":"Tensioner.jpg","TRACKS":"Tracks.jpg","UNDERRUN & LIGHT PANS":"Underrun & Light Pans.png","VALANCES":"Valance.jpg"
+};
+const slug=c=>c.toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"");
+const cats=document.getElementById("cats");
+CATS.forEach(c=>{
+  const candidates=[
+    CAT_IMG[c]?"images/"+CAT_IMG[c]:null,
+    "images/cat_"+slug(c)+".jpg",
+    ...PARTS.filter(p=>p[2]===c).map(p=>"images/"+p[0].replace(/\//g,"_")+".jpg")
+  ].filter(Boolean);
+  const tile=document.createElement("div");
+  tile.className="cat-tile";tile.dataset.cat=c;
+  tile.innerHTML=`<div class="cimg"><img alt="${esc(c)}" loading="lazy"><span class="cph">${esc(c.charAt(0))}</span></div><div class="clabel">${esc(c)}</div>`;
+  const img=tile.querySelector("img");let i=0;
+  if(c==="MISC"){img.style.objectFit="contain";img.style.padding="6px";}
+  img.onerror=()=>{i++;if(i<candidates.length){img.src=candidates[i];}else{img.parentNode.classList.add("noimg");img.remove();}};
+  img.src=candidates[0];
+  tile.addEventListener("click",()=>{
+    catFilter.value=(catFilter.value===c)?"":c;
+    render();
+    document.getElementById("grid").scrollIntoView({behavior:"smooth",block:"start"});
+  });
+  cats.appendChild(tile);
+});
+function updateTiles(){
+  document.querySelectorAll(".cat-tile").forEach(t=>t.classList.toggle("active",t.dataset.cat===catFilter.value));
+}
+
+function render(){
+  const q=search.value.trim().toLowerCase(),cat=catFilter.value;
+  let list=PARTS.filter(p=>(!cat||p[2]===cat)&&(!q||p[0].toLowerCase().includes(q)||p[1].toLowerCase().includes(q)));
+  const s=sortBy.value;
+  if(s==="name")list.sort((a,b)=>a[1].localeCompare(b[1]));
+  else if(s==="priceAsc")list.sort((a,b)=>a[3]-b[3]);
+  else if(s==="priceDesc")list.sort((a,b)=>b[3]-a[3]);
+  else list.sort((a,b)=>a[2].localeCompare(b[2])||a[1].localeCompare(b[1]));
+  grid.innerHTML=list.map(p=>`
+    <div class="card">
+      <div class="cat">${esc(p[2])}</div>
+      <div class="imgbox" data-part="${esc(p[0])}">
+        <img src="images/${p[0].replace(/\//g,"_")}.jpg" alt="${esc(p[0])}" loading="lazy" onerror="this.parentNode.classList.add('noimg');this.remove()">
+        <span class="ph">Photo to follow</span>
+        <button class="gnav gprev" type="button" onclick="galNav(event,this,-1)" aria-label="Previous photo">&#10094;</button>
+        <button class="gnav gnext" type="button" onclick="galNav(event,this,1)" aria-label="Next photo">&#10095;</button>
+        <div class="gdots"></div>
+      </div>
+      <div class="body">
+        <div class="part">${esc(p[0])}</div>
+        <h3>${esc(p[1])}</h3>
+        <div class="ship">${SHIP[p[4]]}</div>
+        ${stockLine(p[6])}
+      </div>
+      <div class="foot">
+        <div class="price">${gbp(p[3])}<br><small>ex VAT</small></div>
+        <div style="text-align:right">${CUST
+          ?`<a class="buy" href="${p[5]}?prefilled_email=${encodeURIComponent(CUST.email)}" target="_blank" rel="noopener">Buy now</a><div class="qtyhint">Qty selectable at checkout</div>`
+          :`<a class="buy locked" onclick="openAcct()">Sign in to buy</a><div class="qtyhint">Account required to purchase</div>`}
+          <br><button type="button" class="addbasket" data-addbasket="${esc(p[0])}" onclick="addToBasket('${esc(p[0])}',this)">+ Add to basket</button></div>
+      </div>
+    </div>`).join("");
+  count.textContent=list.length+" of "+PARTS.length+" parts";
+  nores.style.display=list.length?"none":"block";
+  if(typeof updateTiles==="function")updateTiles();
+  initGalleries();
+}
+
+/* Extra part photos: images/<part>_2.jpg, _3.jpg etc, up to 5 total, shown as a mini gallery. */
+const galleryCache={};
+function probeImage(src){
+  return new Promise(res=>{
+    const im=new Image();
+    im.onload=()=>res(src);
+    im.onerror=()=>res(null);
+    im.src=src;
+  });
+}
+function initGalleries(){
+  document.querySelectorAll(".imgbox[data-part]").forEach(async box=>{
+    const part=box.dataset.part;
+    if(galleryCache[part]){applyGallery(box,galleryCache[part]);return;}
+    const base="images/"+part.replace(/\//g,"_");
+    const candidates=[base+".jpg",base+"_2.jpg",base+"_3.jpg",base+"_4.jpg",base+"_5.jpg"];
+    const results=await Promise.all(candidates.map(probeImage));
+    const valid=results.filter(Boolean);
+    galleryCache[part]=valid;
+    applyGallery(box,valid);
+  });
+}
+function applyGallery(box,valid){
+  if(valid.length<2)return; // single photo (or none) already shown via the plain <img>, nothing to add
+  box.dataset.images=JSON.stringify(valid);
+  box.dataset.idx="0";
+  let img=box.querySelector("img");
+  if(!img){img=document.createElement("img");img.loading="lazy";box.insertBefore(img,box.firstChild);}
+  img.src=valid[0];
+  box.classList.remove("noimg");
+  box.querySelector(".gprev").style.display="flex";
+  box.querySelector(".gnext").style.display="flex";
+  const dots=box.querySelector(".gdots");
+  dots.style.display="flex";
+  dots.innerHTML=valid.map((_,i)=>'<span class="gdot'+(i===0?' on':'')+'"></span>').join("");
+}
+function galNav(evt,btn,dir){
+  evt.preventDefault();evt.stopPropagation();
+  const box=btn.closest(".imgbox");
+  const images=JSON.parse(box.dataset.images||"[]");
+  if(!images.length)return;
+  let idx=(parseInt(box.dataset.idx,10)+dir+images.length)%images.length;
+  box.dataset.idx=idx;
+  box.querySelector("img").src=images[idx];
+  box.querySelectorAll(".gdot").forEach((d,i)=>d.classList.toggle("on",i===idx));
+}
+search.addEventListener("input",render);
+catFilter.addEventListener("change",render);
+sortBy.addEventListener("change",render);
+
+/* Account gate logic */
+const modalBg=document.getElementById("modalBg");
+function openAcct(){modalBg.classList.add("open")}
+function closeAcct(){modalBg.classList.remove("open")}
+modalBg.addEventListener("click",e=>{if(e.target===modalBg)closeAcct()});
+function setTab(t){
+  document.getElementById("paneReg").style.display=t==="reg"?"block":"none";
+  document.getElementById("paneIn").style.display=t==="in"?"block":"none";
+  document.getElementById("tabReg").classList.toggle("on",t==="reg");
+  document.getElementById("tabIn").classList.toggle("on",t==="in");
+}
+const validEmail=e=>/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(e);
+function renderAcct(){
+  document.getElementById("acct").innerHTML=CUST
+    ?`<span class="who">Signed in: ${esc(CUST.name)}</span> &nbsp;<a onclick="signOut()">Sign out</a>`
+    :`<a onclick="openAcct()">Sign in / Register to buy</a>`;
+}
+function saveCust(c){CUST=c;localStorage.setItem("ldCustomer",JSON.stringify(c));renderAcct();render();closeAcct();}
+function signOut(){CUST=null;localStorage.removeItem("ldCustomer");renderAcct();render();}
+function doSignIn(){
+  const n=document.getElementById("iName").value.trim(),e=document.getElementById("iEmail").value.trim();
+  const ok=n&&validEmail(e);
+  document.getElementById("iErr").style.display=ok?"none":"block";
+  if(ok)saveCust({name:n,email:e});
+}
+function doRegister(){
+  const c={
+    name:document.getElementById("rName").value.trim(),
+    email:document.getElementById("rEmail").value.trim(),
+    biz:document.getElementById("rBiz").value.trim(),
+    phone:document.getElementById("rPhone").value.trim(),
+    vat:document.getElementById("rVat").value.trim()
+  };
+  const ok=c.name&&c.phone&&validEmail(c.email);
+  document.getElementById("rErr").style.display=ok?"none":"block";
+  if(!ok)return;
+  if(REGISTER_FORM_URL){
+    const q=new URLSearchParams({
+      "prefill_Name":c.name,"prefill_Email":c.email,"prefill_Business Name":c.biz,
+      "prefill_Business Contact Number":c.phone,"prefill_VAT Number":c.vat,
+      "prefill_Customer Type":(c.biz||c.vat)?"Business":"Consumer"
+    });
+    window.open(REGISTER_FORM_URL+"?"+q.toString(),"_blank");
+  }else{
+    location.href="mailto:parts@lawrencedavid.co.uk?subject="+encodeURIComponent("LD Parts Store account registration")
+      +"&body="+encodeURIComponent(`Name: ${c.name}\nEmail: ${c.email}\nBusiness Name: ${c.biz}\nBusiness Contact Number: ${c.phone}\nVAT Number: ${c.vat}`);
+  }
+  saveCust({name:c.name,email:c.email});
+}
+
+/* Basket logic */
+const BASKET_KEY="ldBasket";
+let BASKET={};try{BASKET=JSON.parse(localStorage.getItem(BASKET_KEY)||"{}")}catch(e){BASKET={}}
+function partLookup(pn){return PARTS.find(p=>p[0]===pn)}
+function saveBasket(){localStorage.setItem(BASKET_KEY,JSON.stringify(BASKET));renderBasketCount();}
+function renderBasketCount(){
+  const n=Object.values(BASKET).reduce((a,b)=>a+b,0);
+  document.getElementById("basketCount").textContent=n;
+}
+function addToBasket(pn,btn){
+  BASKET[pn]=(BASKET[pn]||0)+1;
+  saveBasket();
+  if(btn){btn.textContent="Added ✓";btn.classList.add("added");setTimeout(()=>{btn.textContent="+ Add to basket";btn.classList.remove("added");},1200);}
+}
+function changeBasketQty(pn,delta){
+  const cur=BASKET[pn]||0;
+  const next=cur+delta;
+  if(next<=0){delete BASKET[pn];}else{BASKET[pn]=Math.min(99,next);}
+  saveBasket();
+  renderBasketPanel();
+}
+function removeFromBasket(pn){delete BASKET[pn];saveBasket();renderBasketPanel();}
+function renderBasketPanel(){
+  const entries=Object.entries(BASKET).filter(([pn])=>partLookup(pn));
+  const itemsEl=document.getElementById("basketItems"),emptyEl=document.getElementById("basketEmpty"),
+        noteEl=document.getElementById("basketShipNote"),totalEl=document.getElementById("basketTotal"),
+        checkoutBtn=document.getElementById("basketCheckoutBtn");
+  if(!entries.length){
+    itemsEl.innerHTML="";emptyEl.style.display="block";noteEl.style.display="none";totalEl.style.display="none";
+    checkoutBtn.style.display="none";
+    return;
+  }
+  emptyEl.style.display="none";checkoutBtn.style.display="inline-block";
+  let subtotal=0,anyPOA=false;
+  itemsEl.innerHTML=entries.map(([pn,qty])=>{
+    const p=partLookup(pn);
+    const lineTotal=p[3]*qty;
+    subtotal+=lineTotal;
+    if(p[4]==="POA")anyPOA=true;
+    return `<div class="basket-row">
+      <div class="binfo"><div class="bpart">${esc(pn)}</div><div class="bname">${esc(p[1])}</div></div>
+      <div class="bqty"><button type="button" onclick="changeBasketQty('${esc(pn)}',-1)">&minus;</button><span>${qty}</span><button type="button" onclick="changeBasketQty('${esc(pn)}',1)">+</button></div>
+      <div class="bprice">${gbp(lineTotal)}</div>
+      <button type="button" class="bremove" onclick="removeFromBasket('${esc(pn)}')">Remove</button>
+    </div>`;
+  }).join("");
+  noteEl.style.display="block";
+  noteEl.textContent=anyPOA
+    ?"One or more items in your basket are delivery-quoted separately (POA). No shipping is charged at checkout for this order — our team will contact you afterwards to arrange and quote delivery for the whole order, or you can collect free from Peterborough."
+    :"DX Standard delivery (£25.00) or free collection will be added at checkout.";
+  totalEl.style.display="flex";
+  totalEl.innerHTML=`<span>Subtotal (ex VAT, ex delivery)</span><span>${gbp(subtotal)}</span>`;
+}
+function openBasket(){document.getElementById("basketErr").style.display="none";renderBasketPanel();document.getElementById("basketModalBg").classList.add("open");}
+function closeBasket(){document.getElementById("basketModalBg").classList.remove("open");}
+document.getElementById("basketModalBg").addEventListener("click",e=>{if(e.target.id==="basketModalBg")closeBasket();});
+async function checkoutBasket(){
+  const errEl=document.getElementById("basketErr");
+  errEl.style.display="none";
+  if(!CUST){closeBasket();openAcct();return;}
+  const items=Object.entries(BASKET).filter(([pn])=>partLookup(pn)).map(([part,quantity])=>({part,quantity}));
+  if(!items.length)return;
+  const btn=document.getElementById("basketCheckoutBtn");
+  const originalText=btn.textContent;
+  btn.textContent="Please wait…";btn.disabled=true;
+  try{
+    const resp=await fetch("/api/create-checkout-session",{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({items,email:CUST.email})
+    });
+    const data=await resp.json();
+    if(resp.ok&&data.url){
+      window.location.href=data.url;
+    }else{
+      errEl.textContent="Sorry, we couldn't start checkout: "+(data.error||"unknown error")+". Please try again or contact parts@lawrencedavid.co.uk.";
+      errEl.style.display="block";
+      btn.textContent=originalText;btn.disabled=false;
+    }
+  }catch(e){
+    errEl.textContent="Sorry, we couldn't reach the checkout service. Please check your connection and try again.";
+    errEl.style.display="block";
+    btn.textContent=originalText;btn.disabled=false;
+  }
+}
+
+renderAcct();
+renderBasketCount();
+render();
+
+/* Post-checkout redirect handling */
+(function(){
+  const params=new URLSearchParams(location.search);
+  const status=params.get("checkout");
+  if(status==="success"){
+    BASKET={};saveBasket();
+    const note=document.createElement("div");
+    note.style.cssText="background:#1A1A1A;color:#fff;text-align:center;padding:12px 16px;font-size:10.5pt;font-weight:bold";
+    note.textContent="Thank you — your order was placed successfully. A confirmation and VAT invoice will be emailed to you shortly.";
+    document.body.insertBefore(note,document.body.firstChild);
+  }else if(status==="cancelled"){
+    const note=document.createElement("div");
+    note.style.cssText="background:var(--racing-red);color:#fff;text-align:center;padding:12px 16px;font-size:10.5pt;font-weight:bold";
+    note.textContent="Checkout was cancelled — your basket has been kept, so you can try again when ready.";
+    document.body.insertBefore(note,document.body.firstChild);
+  }
+  if(status){
+    params.delete("checkout");
+    const qs=params.toString();
+    history.replaceState({},"",location.pathname+(qs?"?"+qs:""));
+  }
+})();
+</script>
+</body>
+</html>
